@@ -1,5 +1,4 @@
-# 🎓 Kalkulator ocen – mgr Agnieszka Makuła-Broda
-
+# 🎓 Kalkulator ocen
 Prosty kalkulator online dla nauczycieli, który automatycznie przelicza punkty ze sprawdzianu na procenty i oceny według ustalonych progów.  
 Działa całkowicie w przeglądarce oraz jako aplikacja **PWA** (można ją zainstalować na telefonie lub komputerze).
 
