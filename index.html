@@ -27,7 +27,7 @@
     .small { font-size: 12px; color: var(--muted); }
     .btn { background: linear-gradient(180deg, rgba(56,189,248,.15), rgba(56,189,248,.08)); color: #e6f9ff; border: 1px solid rgba(56,189,248,.5); padding: 10px 14px; border-radius: 12px; cursor: pointer; font-weight: 700; letter-spacing: .3px; }
     .btn:hover { filter: brightness(1.1); }
-    .btn.secondary { background: transparent; border-color: var(--border); color: var(--text); }
+    .btn.secondary { background: transparent; border-color: var(--border); color: #e5e7eb; }
     .install { background: linear-gradient(180deg, rgba(34,197,94,.15), rgba(34,197,94,.08)); border: 1px solid rgba(34,197,94,.5); }
     .kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px; }
     .kpi .box { background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border: 1px solid var(--border); border-radius: 16px; padding: 16px; text-align: center; }
@@ -150,7 +150,7 @@
       quickList: document.getElementById('quickList'),
     };
 
-    const STORAGE_KEY = 'gradeCalc_settings_v4';
+    const STORAGE_KEY = 'gradeCalc_settings_v5';
     const DEFAULTS = {
       maxPts: 20, scale: 6, mode: 'percent', rounding: 1, autoCalc: false,
       names6: {6:'celujący',5:'bardzo dobry',4:'dobry',3:'dostateczny',2:'dopuszczający',1:'niedostateczny'},
@@ -185,12 +185,12 @@
 
     function readThrInputs(){
       const scale = +els.scale.value; const grades = scale===6? [6,5,4,3,2,1] : [5,4,3,2,1]; const out={};
-      grades.forEach(g=>{ const v = parseFloat(document.getElementById('thr_'+g).value); out[g] = isFinite(v)? v : 0; });
+      grades.forEach(g=>{ const el=document.getElementById('thr_'+g); if(el&&el.value!==undefined){ const v=parseFloat(el.value); out[g]=Number.isFinite(v)?v:undefined; } else { out[g]=undefined; } });
       return out;
     }
     function readNameInputs(){
       const scale = +els.scale.value; const grades = scale===6? [6,5,4,3,2,1] : [5,4,3,2,1]; const out={};
-      grades.forEach(g=>{ const v = (document.getElementById('name_'+g).value||'').trim(); out[g] = v || defaultNames(scale)[g]; });
+      grades.forEach(g=>{ const el=document.getElementById('name_'+g); if(el&&typeof el.value==='string'){ const v=el.value.trim(); out[g]=v||defaultNames(scale)[g]; } else { out[g]=defaultNames(scale)[g]; } });
       return out;
     }
 
@@ -199,7 +199,7 @@
       const pct = computePercentage(gotPts, maxPts);
       const grades = scale===6? [6,5,4,3,2,1] : [5,4,3,2,1];
       const thrPercent = {};
-      grades.forEach(g=>{ const t = (thr && thr[g] != null)? thr[g] : defaultThr(scale, mode)[g]; thrPercent[g] = (mode==='points')? (maxPts>0? (t/maxPts)*100 : 0) : t; });
+      grades.forEach(g=>{ const base=defaultThr(scale, mode)[g]; const t = (thr && thr[g] != null)? thr[g] : base; thrPercent[g] = (mode==='points')? (maxPts>0? (t/maxPts)*100 : 0) : t; });
       const ordered = [...grades].sort((a,b)=> (thrPercent[b]-thrPercent[a]) || (b-a));
       let chosen = ordered.find(g => pct >= thrPercent[g]); if(chosen==null) chosen = ordered[ordered.length-1];
       return { pct, gradeNum: chosen, gradeText: (names && names[chosen])? names[chosen] : defaultNames(scale)[chosen] };
@@ -208,16 +208,16 @@
 
     function calcOnce(){
       const maxPts = +els.maxPts.value || 0; const gotPts = +els.gotPts.value || 0; const scale = +els.scale.value; const mode = els.mode.value; const rounding = +els.rounding.value; const thr = readThrInputs(); const names = readNameInputs();
-      const result = pickGrade({gotPts, maxPts, scale, mode, thr, names});
-      els.kpiPct.textContent = formatPct(result.pct, rounding);
-      els.kpiGradeNum.textContent = String(result.gradeNum);
-      els.kpiGradeText.textContent = result.gradeText;
+      const res = pickGrade({gotPts, maxPts, scale, mode, thr, names});
+      els.kpiPct.textContent = formatPct(res.pct, rounding);
+      els.kpiGradeNum.textContent = String(res.gradeNum);
+      els.kpiGradeText.textContent = res.gradeText;
       refreshQuickList();
     }
 
     function refreshQuickList(){
       const maxPts = +els.maxPts.value || 0; const scale = +els.scale.value; const mode = els.mode.value; const thr = readThrInputs(); const names = readNameInputs(); const rounding = +els.rounding.value;
-      const list=[]; for(let p=0; p<=maxPts; p++){ const res=pickGrade({gotPts:p, maxPts, scale, mode, thr, names}); list.push({p, pct: res.pct.toFixed(rounding).replace('.',','), gradeNum: res.gradeNum, gradeText: res.gradeText}); }
+      const list=[]; for(let p=0; p<=maxPts; p++){ const r=pickGrade({gotPts:p, maxPts, scale, mode, thr, names}); list.push({p, pct: r.pct.toFixed(rounding).replace('.',','), gradeNum: r.gradeNum, gradeText: r.gradeText}); }
       els.quickList.innerHTML=''; list.forEach(row=>{ const div=document.createElement('div'); div.style.border='1px solid var(--border)'; div.style.borderRadius='12px'; div.style.padding='8px 12px'; div.style.display='grid'; div.style.gridTemplateColumns='1fr 1fr 1fr 2fr'; div.style.gap='8px'; div.innerHTML = `<div><span class="small">Punkty</span><br><b>${row.p}</b></div><div><span class="small">Procent</span><br><b>${row.pct} %</b></div><div><span class="small">Ocena</span><br><b>${row.gradeNum}</b></div><div><span class="small">Słownie</span><br><b>${row.gradeText}</b></div>`; els.quickList.appendChild(div); });
     }
 
@@ -238,22 +238,29 @@
 
     function readState(){ return { maxPts:+els.maxPts.value, scale:+els.scale.value, mode:els.mode.value, rounding:+els.rounding.value, autoCalc: !!els.autoCalc.checked, thr: readThrInputs(), names: readNameInputs() }; }
 
+    // ZAPIS/RESET
     els.btnSave.addEventListener('click', ()=>{ saveState(readState()); flash(els.btnSave); });
     els.btnReset.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_KEY); init(true); });
 
+    // PRZELICZANIE
     els.gotPts.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); calcOnce(); }});
     document.addEventListener('keydown',(e)=>{ if(e.ctrlKey && e.key==='Enter'){ e.preventDefault(); calcOnce(); }});
     els.btnCalc.addEventListener('click', calcOnce);
 
+    // Auto-calc + spinner
     const spinEl = document.getElementById('calcSpin'); let spinTimer=null; function blipSpinner(){ if(!spinEl) return; spinEl.classList.remove('spin'); void spinEl.offsetWidth; spinEl.classList.add('spin'); clearTimeout(spinTimer); spinTimer=setTimeout(()=> spinEl.classList.remove('spin'), 1000); }
     function onInputAuto(){ calcOnce(); blipSpinner(); }
     function bindAutoCalc(){ try{ els.gotPts.removeEventListener('input', onInputAuto);}catch{} if(els.autoCalc && els.autoCalc.checked){ els.gotPts.addEventListener('input', onInputAuto);} }
 
-    ['maxPts','scale','mode','rounding'].forEach(id=>{ els[id].addEventListener('change', ()=>{ renderThresholdRows(+els.scale.value, els.mode.value, readThrInputs(), readNameInputs()); updateUnitLabel(); refreshQuickList(); saveState(readState()); });});
+    // Zmiany ustawień: zwykłe
+    ['maxPts','mode','rounding'].forEach(id=>{ els[id].addEventListener('change', ()=>{ const thr=readThrInputs(); const names=readNameInputs(); renderThresholdRows(+els.scale.value, els.mode.value, thr, names); updateUnitLabel(); refreshQuickList(); saveState(readState()); });});
+    // Przy zmianie skali: reset progów do domyślnych, zachowaj nazwy
+    els.scale.addEventListener('change', ()=>{ const names=readNameInputs(); const thr=defaultThr(+els.scale.value, els.mode.value); renderThresholdRows(+els.scale.value, els.mode.value, thr, names); updateUnitLabel(); refreshQuickList(); saveState(readState()); });
     els.autoCalc.addEventListener('change', ()=>{ bindAutoCalc(); saveState(readState()); });
 
     function flash(el){ el.style.boxShadow='0 0 0 6px rgba(56,189,248,.2)'; setTimeout(()=> el.style.boxShadow='', 350); }
 
+    // PWA (rejestracja SW)
     if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }
     let deferred; window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferred=e; els.btnInstall.disabled=false; });
     els.btnInstall.addEventListener('click', async()=>{ if(!deferred) return; deferred.prompt(); try{ await deferred.userChoice; }catch{} deferred=null; els.btnInstall.disabled=true; });

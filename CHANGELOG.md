@@ -4,6 +4,19 @@ Wszystkie istotne zmiany i aktualizacje aplikacji będą opisane w tym pliku.
 
 ---
 
+## [v1.0.1] – 2025-10-28
+
+### ✅ Poprawki
+- **Reset progów do domyślnych przy zmianie skali (1–6 ⇄ 1–5)** z zachowaniem **własnych nazw ocen**.
+- Bezpieczny odczyt pól formularza po zmianach skali/trybu (brak błędów, jeśli pole jeszcze nie istnieje).
+- Stabilniejsze przerysowywanie tabeli progów i zapisywanie stanu (`localStorage`).
+
+### ℹ️ Uwagi
+- Podmiana tylko `index.html` w repo wystarczy (PWA/manifest/ikony bez zmian).
+- Po wdrożeniu zalecane twarde odświeżenie: **Ctrl+F5** / **Cmd+Shift+R**.
+
+---
+
 ## [v1.0.0] – 2025-10-28
 
 ### ✨ Nowości
@@ -25,11 +38,3 @@ Wszystkie istotne zmiany i aktualizacje aplikacji będą opisane w tym pliku.
 - JavaScript (czysty, bez bibliotek)
 - Service Worker + Manifest (PWA)
 - Kompatybilne z GitHub Pages i Netlify
-
----
-
-## 📅 Planowane aktualizacje
-- Eksport ocen do **CSV / PDF**
-- Import wyników uczniów z pliku (automatyczne wyliczanie)
-- Możliwość tworzenia list klas / raportów
-- Personalizacja kolorów i logo szkoły
